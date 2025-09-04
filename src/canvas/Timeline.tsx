@@ -11,12 +11,16 @@ import {
   pixelToSecond,
   secondToPixel,
   dateToSeconds,
-  timelineTickmarkFormatter,
   currentDatetimeFormatter,
 } from './timeFormatter';
 
 import { getTickInterval, getMinorTickInterval } from './util';
-import { drawClipStartToEnd, drawLabel, drawTickstep } from './drawTimeline';
+import {
+  drawClipStartToEnd,
+  drawLabel,
+  drawTickstep,
+  drawTimestamp,
+} from './drawTimeline';
 
 // Const.
 const HITBOX_WIDTH = 10;
@@ -34,8 +38,8 @@ export function Timeline() {
     const now = new Date();
     return {
       current: now,
-      start: new Date(now.getTime() - 3600 * 10000),
-      end: new Date(now.getTime() + 3600 * 10000),
+      start: new Date(now.getTime() - 3600 * 1000),
+      end: new Date(now.getTime() + 3600 * 1000),
     };
   });
   const [zoom, setZoom] = useState(TIMELINE_INITIAL_ZOOM);
@@ -114,14 +118,7 @@ export function Timeline() {
     }
 
     // timestamp.
-    ctx.fillStyle = '#000000';
-    ctx.font = '16px Arial';
-    const text = 'Timestamp: ';
-    ctx.fillText(
-      text + currentDatetimeFormatter(centerDate),
-      pixelWidth / 2,
-      pixelHeight / 2 + 70,
-    );
+    drawTimestamp(ctx, pixelWidth, pixelHeight, centerDate);
   }, [zoom, timelineOption, centerDate]);
 
   const onMouseDown = useCallback(
@@ -235,16 +232,58 @@ export function Timeline() {
   }, [drawTimeline]);
 
   return (
-    <div className="relative h-[600px] w-full bg-transparent px-4 overflow-hidden">
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full"
-        onMouseDown={onMouseDown}
-        onMouseUp={onMouseUp}
-        onMouseMove={onMouseMove}
-        onWheel={onWheel}
-      />
-      <div className="absolute left-1/2 top-1/2 h-1/6 -translate-x-1/2 -translate-y-1/2 w-[2px] bg-blue-500 pointer-events-none" />
+    <div className="pt-10">
+      <div className="flex flex-row justify-center">
+        <span className="flex mr-[30px]">시작: </span>
+        <input
+          className="flex"
+          type="datetime-local"
+          step={1}
+          value={currentDatetimeFormatter(timelineOption.start)}
+          onChange={(e) =>
+            setTimelineOption((prev) => ({
+              ...prev,
+              start: new Date(e.target.value),
+            }))
+          }
+        />
+      </div>
+      <div className="flex flex-row justify-center">
+        <span className="flex mr-[30px]">종료: </span>
+        <input
+          className="flex"
+          type="datetime-local"
+          step={1}
+          value={currentDatetimeFormatter(timelineOption.end)}
+          onChange={(e) =>
+            setTimelineOption((prev) => ({
+              ...prev,
+              end: new Date(e.target.value),
+            }))
+          }
+        />
+      </div>
+      <div className="flex flex-row justify-center">
+        <span className="flex mr-[30px]">현재: </span>
+        <input
+          className="flex"
+          type="datetime-local"
+          step={1}
+          value={currentDatetimeFormatter(centerDate)}
+          onChange={(e) => setCenterDate(new Date(e.target.value))}
+        />
+      </div>
+      <div className="relative h-[600px] w-full bg-transparent px-4 overflow-hidden">
+        <canvas
+          ref={canvasRef}
+          className="h-full w-full"
+          onMouseDown={onMouseDown}
+          onMouseUp={onMouseUp}
+          onMouseMove={onMouseMove}
+          onWheel={onWheel}
+        />
+        <div className="absolute left-1/2 top-1/2 h-1/6 -translate-x-1/2 -translate-y-1/2 w-[2px] bg-blue-500 pointer-events-none" />
+      </div>
     </div>
   );
 }
